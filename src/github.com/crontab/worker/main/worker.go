@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"go-crontab-cluster/src/github.com/crontab/master"
+	"go-crontab-cluster/src/github.com/crontab/worker"
 	"runtime"
 	"time"
 )
@@ -13,7 +13,9 @@ var (
 )
 
 func initArgs() {
-	flag.StringVar(&confFile, "config", "./master.json", "指定master.json")
+	// worker -config ./worker.json
+	// worker -h
+	flag.StringVar(&confFile, "config", "./worker.json", "指定worker.json")
 	flag.Parse()
 }
 
@@ -34,17 +36,12 @@ func main() {
 	initEnv()
 
 	//加载配置
-	if err = master.InitConfig(confFile); err != nil {
+	if err = worker.InitConfig(confFile); err != nil {
 		goto ERR
 	}
 
-	//任务管理器
-	if err = master.InitJobMgr(); err != nil {
-		goto ERR
-	}
-
-	//启动API http服务
-	if err = master.InitApiServer(); err != nil {
+	//初始化任务管理器
+	if err = worker.InitJobMgr(); err != nil {
 		goto ERR
 	}
 
