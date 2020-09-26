@@ -20,6 +20,7 @@
     <div class="row">
         <div class="col-md-12">
             <button type="button" class="btn btn-primary" id="new-job">新建任务</button>
+            <button type="button" class="btn btn-success" id="list-worker">健康节点</button>
         </div>
     </div>
 
@@ -88,9 +89,93 @@
             </div><!-- /.modal-content -->
         </div><!-- /.modal-dialog -->
     </div><!-- /.modal -->
+
+    <div id="log-modal" class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">任务日志</h4>
+                </div>
+                <div class="modal-body">
+                    <table id="log-list" class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th>shell命令</th>
+                            <th>错误原因</th>
+                            <th>脚本输出</th>
+                            <th>计划开始时间</th>
+                            <th>实际调度时间</th>
+                            <th>开始执行时间</th>
+                            <th>执行结束时间</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+
+    <div id="worker-modal" class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">健康节点</h4>
+                </div>
+                <div class="modal-body">
+                    <table id="worker-list" class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th>节点IP</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
 </div>
 <script>
     $(document).ready(function () {
+
+        function timeFormat(millsecond) {
+            function paddingNum(num, n) {
+                var len = num.toString().length
+                while (len < n) {
+                    num = '0' + num
+                    len++
+                }
+                return num
+            }
+
+            var date = new Date(millsecond)
+            var year = date.getFullYear()
+            var month = paddingNum(date.getMonth() + 1, 2)
+            var day = paddingNum(date.getDate(), 2)
+            var hour = paddingNum(date.getHours(), 2)
+
+            var minute = paddingNum(date.getMinutes(), 2)
+            var second = paddingNum(date.getSeconds(), 2)
+            var millsecond = paddingNum(date.getMilliseconds(), 3)
+
+            return year + "-" + month + "-" + day + " " + hour + ":" + minute + ":" + second + "." + millsecond
+        }
+
         //1.绑定按钮事件处理函数
         //用js委托机制，DOM事件冒泡的一个关键原理
         $("#job-list").on("click", ".edit-job", function (event) {
@@ -148,12 +233,74 @@
         })
 
         //新建任务
-        $('#new-job').on('click',function(){
+        $('#new-job').on('click', function () {
             $('#edit-name').val("")
             $('#edit-command').val("")
             $('#edit-cronExpr').val("")
             $('#edit-modal').modal('show')
             // window.location.reload()
+        })
+
+        //查看任务日志
+        $('#job-list').on('click', ".log-job", function (event) {
+            //清空日志列表
+            $('#log-list tbody').empty()
+
+            //获取任务名称
+            var jobName = $(this).parents('tr').children('.job-name').text()
+
+            $.ajax({
+                url: '/job/log',
+                dataType: 'json',
+                data: {
+                    name: jobName
+                },
+                success: function (resp) {
+                    if (resp.errno != 0) {
+                        return
+                    }
+                    var logList = resp.data
+                    for (var i = 0; i < logList.length; i++) {
+                        var log = logList[i]
+                        var tr = $('<tr>')
+                        tr.append($('<td>').html(log.command))
+                        tr.append($('<td>').html(log.err))
+                        tr.append($('<td>').html(log.output))
+                        tr.append($('<td>').html(log.command))
+                        tr.append($('<td>').html(timeFormat(log.planTime)))
+                        tr.append($('<td>').html(timeFormat(log.scheduleTime)))
+                        tr.append($('<td>').html(timeFormat(log.startTime)))
+                        tr.append($('<td>').html(timeFormat(log.endTime)))
+                        $('#log-list tbody').append(tr)
+                    }
+                }
+            })
+
+            //弹出模态框
+            $('#log-modal').modal('show')
+            // window.location.reload()
+        })
+
+        $('#list-worker').on('click', function(){
+            //清空现有table
+            $('#worker-list tbody').empty()
+            $.ajax({
+                url:'/worker/list',
+                dataType:'json',
+                success:function(resp){
+                    if(resp.errno!=0){
+                        return
+                    }
+                    var workerList = resp.data
+                    for(var i=0;i<workerList.length;++i){
+                        var workerIP=workerList[i]
+                        var tr=$('<tr>')
+                        tr.append($('<td>').html(workerIP))
+                        $('#worker-list tbody').append(tr)
+                    }
+                }
+            })
+            $('#worker-modal').modal('show')
         })
 
         //2. 定义一个函数，用于刷新任务列表
@@ -182,6 +329,7 @@
                             .append('<button class="btn btn-info edit-job">编辑</button>')
                             .append('<button class="btn btn-danger delete-job">删除</button>')
                             .append('<button class="btn btn-warning kill-job">强杀</button>')
+                            .append('<button class="btn btn-success log-job">日志</button>')
                         tr.append($('<td>').append(toolbar))
                         $("#job-list tbody").append(tr)
                     }

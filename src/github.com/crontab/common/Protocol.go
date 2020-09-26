@@ -53,6 +53,33 @@ type JobExecuteResult struct {
 	EndTime     time.Time       //结束时间
 }
 
+//任务日志过滤条件
+type JobLogFilter struct {
+	JobName string `bson:"jobName"`
+}
+
+//任务日志排序规则
+type SortLogByStartTime struct {
+	SortOrder int `bson:"startTime"` //按照startTime: -1
+}
+
+//任务执行日志
+type JobLog struct {
+	JobName      string `json:"jobName" bson:"jobName"`
+	Command      string `json:"command" bson:"command"`
+	Err          string `json:"err" bson:"err"`
+	OutPut       string `json:"output" bson:"output"`
+	PlanTime     int64  `json:"planTime" bson:"planTime"`
+	ScheduleTime int64  `json:"scheduleTime" bson:"scheduleTime"`
+	StartTime    int64  `json:"startTime" bson:"startTime"`
+	EndTime      int64  `json:"endTime" bson:"endTime"`
+}
+
+//日志批次，用于批量插入到mongodb表
+type LogBatch struct {
+	Logs []interface{} //多条日志
+}
+
 //应答方法
 func BuildResponse(errno int, msg string, data interface{}) (resp []byte, err error) {
 	//1.定义一个response
@@ -134,4 +161,8 @@ func BuildJobExecuteInfo(jobSchedulePlan *JobSchedulePlan) (jobExecuteInfo *JobE
 	jobExecuteInfo.CancelCtx, jobExecuteInfo.CancelFunc = context.WithCancel(context.TODO())
 
 	return
+}
+
+func ExtractWorkerIP(regKey string) string {
+	return strings.TrimPrefix(regKey, JOB_WORKER_DIR)
 }

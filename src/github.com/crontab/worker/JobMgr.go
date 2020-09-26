@@ -35,7 +35,7 @@ func (jobMgr *JobMgr) watchJobs() (err error) {
 	)
 
 	//fmt.Println("start watching ")
-	//1.get一下/cron/jobs目录下的所有任务，并且或者当前集群的revision
+	//1.get一下/cron/jobs目录下的所有任务，并且获知当前集群的revision
 	if getResp, err = jobMgr.kv.Get(context.TODO(), common.JOB_SAVE_DIR, clientv3.WithPrefix()); err != nil {
 		fmt.Println("error happened")
 		return
