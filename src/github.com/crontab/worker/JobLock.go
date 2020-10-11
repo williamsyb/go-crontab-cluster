@@ -102,6 +102,6 @@ FAIL:
 func (jobLock *JobLock) Unlock() {
 	if jobLock.isLocked {
 		jobLock.cancelFunc()                                  //取消我们程序自动续租的协程
-		jobLock.lease.Revoke(context.TODO(), jobLock.leaseId) // 释放租约
+		jobLock.lease.Revoke(context.TODO(), jobLock.leaseId) // 释放租约，revoke操作会将该租约下的所有key都失效
 	}
 }

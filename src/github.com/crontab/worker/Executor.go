@@ -51,7 +51,7 @@ func (executor *Executor) ExecuteJob(info *common.JobExecuteInfo) {
 			//上锁成功后，重置任务启动时间
 			result.StartTime = time.Now()
 			//执行shell命令
-			cmd = exec.CommandContext(info.CancelCtx, "C:\\cygwin64\\bin\\bash.exe", "-c", info.Job.Command)
+			cmd = exec.CommandContext(info.CancelCtx, "C:\\cygwin64\\bin\\bash.exe", "-c", info.Job.Command) //TODO 这里选用了windows下开发，放入linux前需要将bash改掉
 			//执行并捕获输出
 			output, err = cmd.CombinedOutput()
 
