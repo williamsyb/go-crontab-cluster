@@ -51,6 +51,7 @@ func getLocalIP() (ipv4 string, err error) {
 
 // 注册到/cron/workers/IP, 并自动续租
 func (register *Register) keepOnline() {
+	// 不能只是put一个key到etcd中，要保证节点挂掉之后能够自动注销key，所以需要有一个租约，并不断的续租
 	var (
 		regKey         string
 		leaseGrantResp *clientv3.LeaseGrantResponse
@@ -94,7 +95,7 @@ func (register *Register) keepOnline() {
 			}
 		}
 
-	RETRY:
+	RETRY: // TODO 这里可以添加重试的次数，如果无论如何无法注册，则发出提示
 		time.Sleep(1 * time.Second)
 		if cancelFunc != nil {
 			cancelFunc()
