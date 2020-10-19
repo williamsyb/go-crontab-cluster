@@ -2,6 +2,7 @@ package worker
 
 import (
 	"go-crontab-cluster/src/github.com/crontab/common"
+	"math/rand"
 	"os/exec"
 	"time"
 )
@@ -39,6 +40,8 @@ func (executor *Executor) ExecuteJob(info *common.JobExecuteInfo) {
 
 		//上锁
 		//随机睡眠(0~1秒)，为了防止不同机器之间分布式锁一直被某一台机器抢占（由于cpu的分时特性），为此牺牲一点定时任务的准时性
+		time.Sleep(time.Duration(rand.Intn(1000)) * time.Millisecond)
+
 		err = jobLock.TryLock()
 		defer jobLock.Unlock()
 
